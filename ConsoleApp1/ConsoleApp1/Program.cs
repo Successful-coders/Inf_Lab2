@@ -27,7 +27,7 @@ namespace ConsoleApp1
             }
             return count;
         }
-        static string FromDec(long n, int p)
+        static string FromDec(long n, int p)//перевод в двоичную
         {
             var result = "";
             for (; n > 0; n /= p)
@@ -42,9 +42,9 @@ namespace ConsoleApp1
             List<double> result = Readfile("f.txt");
             //List<int> mark = new List<int>();
             //List<int> exponent = new List<int>();
-            int[] mark = new int[result.Count];
-            int[] exponent = new int[result.Count];
-            string[] result2 = new string[result.Count];
+            int[] mark = new int[result.Count];//массив знаков
+            int[] exponent = new int[result.Count];//массив порядка
+            string[] result2 = new string[result.Count];//массив результата представленного в двоичном виде
 
             for (int i = 0; i < result.Count; i++)
             {
@@ -56,13 +56,16 @@ namespace ConsoleApp1
                     {
                         mark[i] = 0;
                     }
+
                 result[i] = Math.Abs(result[i]);
-                string str = System.Convert.ToString(result[i]);
-                string[] parts = str.Split(',');
-                exponent[i] = parts[0].Length;//1
-                exponent[i] = Convert.ToInt32(FromDec(exponent[i], 2));//2
-                result[i] = result[i] * Math.Pow(10, parts[1].Length);//3,4
-                result2[i] = FromDec((int)(result[i]), 2);//5
+
+                string str = System.Convert.ToString(result[i]);//разделяю на целую и дробную часть, чтобы узнать колличество цифр
+                string[] parts = str.Split(',');// пробовала через Math.Truncate, но там проблемы с дробной частью были
+                exponent[i] = parts[0].Length;//1 порядок
+
+                exponent[i] = Convert.ToInt32(FromDec(exponent[i], 2));//2 порядок в 2-ичной
+                result[i] = result[i] * Math.Pow(10, parts[1].Length);//3,4 - полное число без дробной части
+                result2[i] = FromDec((int)(result[i]), 2);//5 - это число в 2-ичной
 
             }
         }
