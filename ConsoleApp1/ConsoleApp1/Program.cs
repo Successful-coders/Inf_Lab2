@@ -6,85 +6,145 @@ namespace ConsoleApp1
 {
     class Program
     {
-
-        static List<double> Readfile(string filename)
+        private struct DigitDouble
         {
-            List<double> numbers = new List<double>();
+            public double number;
+            public int digitCapacity;
+        }
+        private struct DigitHex
+        {
+            public string number;
+            public int digitCapacity;
+        }
+
+        static List<DigitDouble> ReadfileDigit(string filename)
+        {
+            List<DigitDouble> numbers = new List<DigitDouble>();
             foreach (var line in File.ReadLines(filename))
             {
-                numbers.Add(double.Parse(line, System.Globalization.CultureInfo.InvariantCulture));
+                string[] data = line.Split(' ');
+                DigitDouble digitNumber;
+                digitNumber.number = double.Parse(data[0], System.Globalization.CultureInfo.InvariantCulture);
+                digitNumber.digitCapacity = Convert.ToInt32(data[1]);
+
+                numbers.Add(digitNumber);
+            }
+            return numbers;
+        }
+        static List<DigitHex> ReadfileHex(string filename)
+        {
+            List<DigitHex> numbers = new List<DigitHex>();
+            foreach (var line in File.ReadLines(filename))
+            {
+                string[] data = line.Split(' ');
+                DigitHex digitNumber;
+                digitNumber.number = data[0];
+                digitNumber.digitCapacity = Convert.ToInt32(data[1]);
+
+                numbers.Add(digitNumber);
             }
             return numbers;
         }
 
-        static int getCountsOfDigits(int number)//count of number
+        static double MemoryRepresToDoule(string repres, int digitCapacity)
         {
-            int count = (number == 0) ? 1 : 0;
-            while (number != 0)
+            if (digitCapacity != 32 && digitCapacity != 64)
             {
-                count++;
-                number /= 10;
+                throw new Exception("NonExistentDigitCapacity");
             }
-            return count;
-        }
-        static string FromDec(long n, int p)//перевод в двоичную
-        {
-            var result = "";
-            for (; n > 0; n /= p)
+
+            string doubleRepres = Convert.ToString(Convert.ToInt32(repres, 16), 2);
+
+            int sign;
+            if (doubleRepres[0] == '0')
             {
-                var x = n % p;
-                result = (char)(x < 0 || x > 9 ? x + 'A' - 10 : x + '0') + result;
+                sign = 1;
             }
-            return result;
+            else
+            {
+                sign = -1;
+            }
+
+            int exponent;
+            double fraction;
+            if(digitCapacity == 32)
+            {
+                exponent = Convert.ToInt32(doubleRepres.Substring(1, 8), 2);
+                fraction = Convert.ToInt32(doubleRepres.Substring(9), 2);
+                fraction /= Math.Pow(10, fraction.ToString().Length);
+            }
+            else
+            {
+                exponent = Convert.ToInt32(doubleRepres.Substring(1, 11), 2);
+                fraction = Convert.ToInt32(doubleRepres.Substring(12), 2);
+                fraction /= Math.Pow(10, fraction.ToString().Length);
+            }
+
+            return sign * (fraction * Math.Pow(10, exponent));
         }
-
-        static string[] FromEVM_64 (int mark, int exponent, string result, int n)
+        static string DoubleToMemoryRepres(double number, int digitCapacity)
         {
-            string[] resultEvm = new string[32];
-            resultEvm[0] = resultEvm[12] = System.Convert.ToString(mark);
-            
-            return resultEvm;
-        }
+            if(digitCapacity != 32 && digitCapacity != 64)
+            {
+                throw new Exception("NonExistentDigitCapacity");
+            }
 
-        static string[] FromEVM_32(int mark, int exponent, string result, int n)
-        {
-            string[] resultEvm = new string[32];
-            resultEvm[0] = resultEvm[9] = System.Convert.ToString(mark);
+            int sign;
+            int exponent;
+            if (number < 0)
+            {
+                sign = 1;
+            }
+            else
+            {
+                sign = 0;
+            }
+            number = Math.Abs(number);
 
-            return resultEvm;
+            string numberAsString = number.ToString();//разделяю на целую и дробную часть, чтобы узнать колличество цифр
+            string[] parts = new string[2];
+            if (numberAsString.Contains('.'))
+            {
+                parts = numberAsString.Split('.');
+            }
+            else
+            {
+                parts[0] = numberAsString;
+                parts[1] = "";
+            }
+
+            exponent = Convert.ToInt32(Convert.ToString(parts[0].Length, 2));//2 порядок в 2-ичной
+            number *= Math.Pow(10, parts[1].Length);//3,4 - полное число без дробной части
+            string fraction = Convert.ToString((int)number, 2);//5 - это число в 2-ичной
+
+            string doubleRepres;
+            if (digitCapacity == 32)
+            {
+                doubleRepres = sign.ToString() + String.Format("{0:d8}", exponent) + String.Format("{0:d23}", fraction);
+            }
+            else
+            {
+                doubleRepres = sign.ToString() + String.Format("{0:d11}", exponent) + String.Format("{0:d42}", fraction);
+            }
+
+            return Convert.ToInt32(doubleRepres, 2).ToString("X");
         }
         static void Main(string[] args)
         {
-            List<double> result = Readfile("f.txt");
-            //List<int> mark = new List<int>();
-            //List<int> exponent = new List<int>();
-            int[] mark = new int[result.Count];//массив знаков
-            int[] exponent = new int[result.Count];//массив порядка
-            string[] result2 = new string[result.Count];//массив результата представленного в двоичном виде
+            List<DigitDouble> digitNumbers = ReadfileDigit("Digit.txt");
 
-            for (int i = 0; i < result.Count; i++)
+            foreach(DigitDouble digitNumber in digitNumbers)
             {
-                if (result[i] < 0)//0
-                    {
-                        mark[i] = 1;
-                    }
-                else
-                    {
-                        mark[i] = 0;
-                    }
+                string numberHex = DoubleToMemoryRepres(digitNumber.number, digitNumber.digitCapacity);
+                Console.WriteLine(numberHex);
+            }
 
-                result[i] = Math.Abs(result[i]);
+            List<DigitHex> digitHexes = ReadfileHex("Hex.txt");
 
-                string str = System.Convert.ToString(result[i]);//разделяю на целую и дробную часть, чтобы узнать колличество цифр
-                string[] parts = str.Split(',');// пробовала через Math.Truncate, но там проблемы с дробной частью были
-                exponent[i] = parts[0].Length;//1 порядок
-
-                exponent[i] = Convert.ToInt32(FromDec(exponent[i], 2));//2 порядок в 2-ичной
-                result[i] = result[i] * Math.Pow(10, parts[1].Length);//3,4 - полное число без дробной части
-                result2[i] = FromDec((int)(result[i]), 2);//5 - это число в 2-ичной
-
-                FromEVM_32(mark[i], exponent[i], result2[i], result.Count);
-                FromEVM_64(mark[i], exponent[i], result2[i], result.Count);
+            foreach (DigitHex digitHex in digitHexes)
+            {
+                double numberDouble = MemoryRepresToDoule(digitHex.number, digitHex.digitCapacity);
+                Console.WriteLine(numberDouble);
             }
         }
     }
