@@ -37,6 +37,22 @@ namespace ConsoleApp1
             }
             return result;
         }
+
+        static string[] FromEVM_64 (int mark, int exponent, string result, int n)
+        {
+            string[] resultEvm = new string[32];
+            resultEvm[0] = resultEvm[12] = System.Convert.ToString(mark);
+            
+            return resultEvm;
+        }
+
+        static string[] FromEVM_32(int mark, int exponent, string result, int n)
+        {
+            string[] resultEvm = new string[32];
+            resultEvm[0] = resultEvm[9] = System.Convert.ToString(mark);
+
+            return resultEvm;
+        }
         static void Main(string[] args)
         {
             List<double> result = Readfile("f.txt");
@@ -67,6 +83,8 @@ namespace ConsoleApp1
                 result[i] = result[i] * Math.Pow(10, parts[1].Length);//3,4 - полное число без дробной части
                 result2[i] = FromDec((int)(result[i]), 2);//5 - это число в 2-ичной
 
+                FromEVM_32(mark[i], exponent[i], result2[i], result.Count);
+                FromEVM_64(mark[i], exponent[i], result2[i], result.Count);
             }
         }
     }
