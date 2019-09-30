@@ -53,7 +53,7 @@ namespace ConsoleApp1
                 throw new Exception("NonExistentDigitCapacity");
             }
 
-            string doubleRepres = Convert.ToString(Convert.ToInt32(repres, 16), 2);
+            string doubleRepres = Convert.ToString(Convert.ToInt64(repres, 16), 2);
 
             int sign;
             if (doubleRepres[0] == '0')
@@ -70,7 +70,7 @@ namespace ConsoleApp1
             if(digitCapacity == 32)
             {
                 exponent = Convert.ToInt32(doubleRepres.Substring(1, 8), 2);
-                fraction = Convert.ToInt32(doubleRepres.Substring(9), 2);
+                fraction = Convert.ToInt64(doubleRepres.Substring(9), 2);
                 fraction /= Math.Pow(10, fraction.ToString().Length);
             }
             else
@@ -103,9 +103,9 @@ namespace ConsoleApp1
 
             string numberAsString = number.ToString();//разделяю на целую и дробную часть, чтобы узнать колличество цифр
             string[] parts = new string[2];
-            if (numberAsString.Contains('.'))
+            if (numberAsString.Contains(','))
             {
-                parts = numberAsString.Split('.');
+                parts = numberAsString.Split(',');
             }
             else
             {
@@ -127,7 +127,7 @@ namespace ConsoleApp1
                 doubleRepres = sign.ToString() + String.Format("{0:d11}", exponent) + String.Format("{0:d42}", fraction);
             }
 
-            return Convert.ToInt32(doubleRepres, 2).ToString("X");
+            return Convert.ToInt64(doubleRepres, 2).ToString("X");
         }
         static void Main(string[] args)
         {
